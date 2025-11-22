@@ -16,11 +16,14 @@ if (window.location.pathname.includes("category.html")) {
   if (category && titleEl && dishList) {
     titleEl.textContent = category;
 
-    // Decide which API to use
+    // ✅ Condition fix for Drink and Meal
     let apiUrl;
-    if (category.toLowerCase() === "drink" || category.toLowerCase() === "drinks") {
+    if (category.toLowerCase() === "drink") {
       // Use CocktailDB for drinks
       apiUrl = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=Cocktail";
+    } else if (category.toLowerCase() === "meal") {
+      // Map "Meal" to a valid MealDB category (e.g. Beef)
+      apiUrl = "https://www.themealdb.com/api/json/v1/1/filter.php?c=Beef";
     } else {
       // Default: use MealDB
       apiUrl = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`;
@@ -31,16 +34,17 @@ if (window.location.pathname.includes("category.html")) {
       .then(data => {
         dishList.innerHTML = ""; // clear any previous
 
-        if (!data.meals) {
+        const items = data.meals || data.drinks; // CocktailDB returns drinks
+        if (!items) {
           dishList.innerHTML = "<p style='color:red;'>No recipes found for this category.</p>";
           return;
         }
 
-        data.meals.forEach(meal => {
+        items.forEach(item => {
           const link = document.createElement("a");
           link.className = "btn";
-          link.textContent = meal.strMeal || meal.strDrink; // CocktailDB uses strDrink
-          link.href = `recipe.html?id=${meal.idMeal || meal.idDrink}`; // CocktailDB uses idDrink
+          link.textContent = item.strMeal || item.strDrink;
+          link.href = `recipe.html?id=${item.idMeal || item.idDrink}`;
           dishList.appendChild(link);
         });
       })

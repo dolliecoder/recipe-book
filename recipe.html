@@ -11,28 +11,6 @@
   </div>
 
   <script src="script.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-
-    fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`)
-      .then(res => res.json())
-      .then(data => {
-        const meal = data.meals[0];
-        const recipeDiv = document.getElementById("recipe");
-        recipeDiv.innerHTML = `
-          <h1>${meal.strMeal}</h1>
-          <img src="${meal.strMealThumb}" alt="${meal.strMeal}" style="max-width:400px;border-radius:10px;">
-          <p><strong>Category:</strong> ${meal.strCategory}</p>
-          <p><strong>Area:</strong> ${meal.strArea}</p>
-          <h3>Instructions:</h3>
-          <p>${meal.strInstructions}</p>
-          <h3>Ingredients:</h3>
-          <ul>
-            ${Array.from({length:20},(_,i)=> meal[`strIngredient${i+1}`] ? `<li>${meal[`strIngredient${i+1}`]} - ${meal[`strMeasure${i+1}`]}</li>` : "").join("")}
-          </ul>
-        `;
-      });
-  </script>
+  
 </body>
 </html>
