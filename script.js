@@ -16,15 +16,31 @@ if (window.location.pathname.includes("category.html")) {
   if (category && titleEl && dishList) {
     titleEl.textContent = category;
 
-    fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`)
+    // Decide which API to use
+    let apiUrl;
+    if (category.toLowerCase() === "drink" || category.toLowerCase() === "drinks") {
+      // Use CocktailDB for drinks
+      apiUrl = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=Cocktail";
+    } else {
+      // Default: use MealDB
+      apiUrl = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`;
+    }
+
+    fetch(apiUrl)
       .then(res => res.json())
       .then(data => {
         dishList.innerHTML = ""; // clear any previous
+
+        if (!data.meals) {
+          dishList.innerHTML = "<p style='color:red;'>No recipes found for this category.</p>";
+          return;
+        }
+
         data.meals.forEach(meal => {
           const link = document.createElement("a");
           link.className = "btn";
-          link.textContent = meal.strMeal;
-          link.href = `recipe.html?id=${meal.idMeal}`;
+          link.textContent = meal.strMeal || meal.strDrink; // CocktailDB uses strDrink
+          link.href = `recipe.html?id=${meal.idMeal || meal.idDrink}`; // CocktailDB uses idDrink
           dishList.appendChild(link);
         });
       })
@@ -41,9 +57,35 @@ if (window.location.pathname.includes("recipe.html")) {
   const recipeDiv = document.getElementById("recipe");
 
   if (id && recipeDiv) {
+    // Try MealDB first, fallback to CocktailDB if not found
     fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`)
       .then(res => res.json())
       .then(data => {
+        if (!data.meals) {
+          // If not a meal, try CocktailDB
+          return fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`)
+            .then(res => res.json())
+            .then(drinkData => {
+              const drink = drinkData.drinks[0];
+              recipeDiv.innerHTML = `
+                <h1>${drink.strDrink}</h1>
+                <img src="${drink.strDrinkThumb}" alt="${drink.strDrink}" style="max-width:400px;border-radius:10px;">
+                <p><strong>Category:</strong> ${drink.strCategory}</p>
+                <p><strong>Alcoholic:</strong> ${drink.strAlcoholic}</p>
+                <h3>Instructions:</h3>
+                <p>${drink.strInstructions}</p>
+                <h3>Ingredients:</h3>
+                <ul>
+                  ${Array.from({length:15}, (_,i) => {
+                    const ingredient = drink[`strIngredient${i+1}`];
+                    const measure = drink[`strMeasure${i+1}`];
+                    return ingredient ? `<li>${ingredient} - ${measure || ""}</li>` : "";
+                  }).join("")}
+                </ul>
+              `;
+            });
+        }
+
         const meal = data.meals[0];
         recipeDiv.innerHTML = `
           <h1>${meal.strMeal}</h1>
