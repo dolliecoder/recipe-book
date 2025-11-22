@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Recipe App - Category</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="overlay">
+    <h1 id="categoryTitle">Category</h1>
+    <div id="dishList" class="buttons"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Get category from URL
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get("c");
+    document.getElementById("categoryTitle").textContent = category;
+
+    // Fetch dishes in this category
+    fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`)
+      .then(res => res.json())
+      .then(data => {
+        const dishList = document.getElementById("dishList");
+        data.meals.forEach(meal => {
+          const link = document.createElement("a");
+          link.className = "btn";
+          link.textContent = meal.strMeal;
+          link.href = `recipe.html?id=${meal.idMeal}`;
+          dishList.appendChild(link);
+        });
+      });
+  </script>
+</body>
+</html>
